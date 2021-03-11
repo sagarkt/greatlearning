@@ -5,6 +5,7 @@ class PlayGame
   IN_GAME = :IN_GAME
   YET_TO_START = :YET_TO_START
   SKIP_NEXT_TURN = :SKIP_NEXT_TURN
+  TILL_END_PLAYER = -1
   GAME_MESSAGES = {
     received_6: 'You have rolled 6!. You get one more chance.',
     received_1: 'You have rolled 1!. Beware, if you receive 1 again, then your next chance will be skipped.',
@@ -16,6 +17,7 @@ class PlayGame
     @points_accumulate = points_accumulate
     @playing_players = (1..total_players).to_a
     @won_players = []
+    @last_rank = 0
     init_players_score_table
   end
 
@@ -23,10 +25,9 @@ class PlayGame
     show_welcome_message
     start_player = next_player
     while !all_players_won? do
-      @won_players = []
-      @playing_players[start_player..-1].each do |player_number|
+      @playing_players[start_player..TILL_END_PLAYER].each do |player_number|
         if @points_score_table[player_number.to_s][:status] == SKIP_NEXT_TURN
-          @points_score_table[player_number.to_s][:status] = IN_GAME
+          allow_next_turn player_number
           next
         end
         @points_score_table[player_number.to_s][:status] = IN_GAME
@@ -47,17 +48,17 @@ class PlayGame
   end
 
   def add_to_player_score player_number, dice_number
-    if last_dice_was_one? player_number, dice_number
-      skip_next_turn player_number
-      return
-    end
     @points_score_table[player_number.to_s][:score] += dice_number
-    @points_score_table[player_number.to_s][:last_dice_number] = dice_number
     if @points_score_table[player_number.to_s][:score] >= @points_accumulate
       player_won player_number
       @playing_players.delete player_number
       return
     end
+    if last_dice_was_one? player_number, dice_number
+      skip_next_turn_of player_number
+      return
+    end
+    @points_score_table[player_number.to_s][:last_dice_number] = dice_number
     unless GAME_MESSAGES["received_#{dice_number}".to_sym].nil?
       print_game_message dice_number
       play_again player_number
@@ -65,7 +66,7 @@ class PlayGame
   end
 
   def last_dice_was_one? player_number, current_dice
-    @points_score_table[player_number.to_s][:last_dice_number] == current_dice
+    current_dice == 1 && @points_score_table[player_number.to_s][:last_dice_number] == 1
   end
 
   def rolled_dice_number
@@ -75,11 +76,17 @@ class PlayGame
   end
 
   def play_again player_number
+    print_players_score_table
     add_to_player_score player_number, rolled_dice_number if player_rolled_a_dice? player_number
   end
 
-  def skip_next_turn player_number
+  def skip_next_turn_of player_number
     @points_score_table[player_number.to_s][:status] = SKIP_NEXT_TURN
+  end
+
+  def allow_next_turn player_number
+    puts GAME_MESSAGES[:chance_skipped]
+    @points_score_table[player_number.to_s][:status] = IN_GAME
   end
 
   def next_player
@@ -91,21 +98,18 @@ class PlayGame
   end
 
   def player_rolled_a_dice? player_number
-    puts "Player-#{player_number} it's your turn (press 'r' to roll the dice)"
+    print "Player-#{player_number} it's your turn (press 'r' to roll the dice): "
     begin
       user_input = STDIN.gets.chomp
-      puts "press 'r'" if user_input != 'r'
+      print "press 'r': " if user_input != 'r'
     end while(user_input != 'r')
     true
   end
 
   def print_players_score_table
-    puts '_________________________________________________________________________________________________'
-    puts "|\t Player Number \t|\t Score / Acumulate Points \t\t|\t Status \t|"
-    puts '|-----------------------+-----------------------------------------------+-----------------------|'
+    print_table_column_headers
     1.upto(@total_players) do |player_number|
-      puts "|\t\t#{player_number} \t|\t\t #{@points_score_table[player_number.to_s][:score]}/#{@points_accumulate} \t\t\t\t|\t #{@points_score_table[player_number.to_s][:status]} \t|"
-      puts '|-----------------------+-----------------------------------------------+-----------------------|'
+      print_player_score_table_row player_number
     end
     puts
   end
@@ -117,11 +121,33 @@ class PlayGame
   def player_won player_number
     puts "Player #{player_number} Won! Congraluations!!"
     @points_score_table[player_number.to_s][:status] = WINNER
+    @points_score_table[player_number.to_s][:rank] = @last_rank+1
+    @last_rank += 1
     @won_players.push player_number
   end
 
   def reset_remaining_players
     @playing_players -= @won_players
+    @won_players = []
+  end
+
+  def print_player_score_table_row player_number
+    row = "|\t\t#{player_number} \t"
+    row += "|\t\t #{@points_score_table[player_number.to_s][:score]}/#{@points_accumulate} \t\t\t\t"
+    row += "|\t #{@points_score_table[player_number.to_s][:status]} \t"
+    row += "|\t #{@points_score_table[player_number.to_s][:rank]} \t|"
+    puts row
+    print_table_row_separator
+  end
+
+  def print_table_row_separator
+    puts '|-----------------------+-----------------------------------------------+-----------------------|---------------|'
+  end
+
+  def print_table_column_headers
+    print_table_row_separator
+    puts "|\t Player Number \t|\t Score / Acumulate Points \t\t|\t Status \t|\tRank\t|"
+    print_table_row_separator
   end
 
   def init_players_score_table
@@ -130,7 +156,8 @@ class PlayGame
       @points_score_table[player_number.to_s] = {
         score: 0,
         last_dice_number: 0,
-        status: YET_TO_START
+        status: YET_TO_START,
+        rank: 0
       }
     end
   end
