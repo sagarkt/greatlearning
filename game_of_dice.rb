@@ -42,8 +42,16 @@ class PlayGame
   private
 
   def show_welcome_message
-    puts "Total Players: #{@total_players}"
-    puts "Points To Accumulate: #{@points_accumulate}"
+    puts '*********************************************************************'
+    puts '*               + + + Welcome to Rolling Dice Game + + +            *'
+    puts '*********************************************************************'
+    puts "Total Players: \t#{@total_players}"
+    puts "Points To Accumulate: \t#{@points_accumulate}"
+    puts 'Rules:'
+    puts "1: If you get 6 on rolled dice, you will get a bonus chance!"
+    puts "2: If you get 1 on rolled dice, you will get a bonus chance, but, if you again get 1, then your next chance will be skipped. Sorry! Rule is Rule :-D"
+    puts '*********************************************************************'
+    puts '*********************************************************************'
     print_players_score_table
   end
 
