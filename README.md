@@ -15,4 +15,5 @@ PDF: [Great Learning FullStack Engineer Coding Question](https://github.com/saga
 
 2. Run the file
    `ruby game_of_dice.rb 3, 200`
-   Here 3 is the number of total players playing the game and 200 is the M points to be accumulated to win the game.
+
+Here 3 is the number of total players playing the game and 200 is the M points to be accumulated to win the game.
