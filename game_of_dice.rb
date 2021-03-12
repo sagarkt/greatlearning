@@ -23,7 +23,7 @@ class PlayGame
 
   def start
     show_welcome_message
-    start_player = next_player
+    start_player = first_player
     while !all_players_won? do
       @playing_players[start_player..TILL_END_PLAYER].each do |player_number|
         if @points_score_table[player_number.to_s][:status] == SKIP_NEXT_TURN
@@ -98,7 +98,7 @@ class PlayGame
     @points_score_table[player_number.to_s][:status] = IN_GAME
   end
 
-  def next_player
+  def first_player
     @playing_players.sample
   end
 
