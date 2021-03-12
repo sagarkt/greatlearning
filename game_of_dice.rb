@@ -49,8 +49,9 @@ class PlayGame
     puts "Points To Accumulate: \t#{@points_accumulate}"
     puts 'Rules:'
     puts "1: If you get 6 on rolled dice, you will get a bonus chance!"
-    puts "2: If you get 1 on rolled dice, you will get a bonus chance, but, if you again get 1, then your next chance will be skipped. Sorry! Rule is Rule :-D"
+    puts "2: If you get consecutive 1 on rolled dice, then your next chance will be skipped. Sorry! Rule is Rule :-D"
     puts '*********************************************************************'
+    puts "*\t\t\t+ + + Let\'s Begin + + +\t\t\t    *"
     puts '*********************************************************************'
     print_players_score_table
   end
@@ -67,7 +68,7 @@ class PlayGame
       return
     end
     @points_score_table[player_number.to_s][:last_dice_number] = dice_number
-    unless GAME_MESSAGES["received_#{dice_number}".to_sym].nil?
+    unless GAME_MESSAGES["received_#{dice_number}".to_sym].nil? && dice_number != 1
       print_game_message dice_number
       play_again player_number
     end
@@ -93,7 +94,7 @@ class PlayGame
   end
 
   def allow_next_turn player_number
-    puts GAME_MESSAGES[:chance_skipped]
+    puts "Player-#{player_number}, #{GAME_MESSAGES[:chance_skipped]}"
     @points_score_table[player_number.to_s][:status] = IN_GAME
   end
 
